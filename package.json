@@ -1,0 +1,30 @@
+{
+  "name": "cc-engines",
+  "version": "0.1.0",
+  "description": "Delegate Claude Code work to external coding-agent CLIs (OpenAI Codex, xAI Grok, Google Antigravity) as native subagents + skills, with a liveness-safe orchestration policy.",
+  "type": "module",
+  "bin": {
+    "cc-engines": "bin/install.mjs"
+  },
+  "files": [
+    "bin",
+    "assets",
+    "templates",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "claude-code",
+    "subagent",
+    "codex",
+    "grok",
+    "antigravity",
+    "gemini",
+    "orchestration",
+    "ai-agents"
+  ],
+  "license": "MIT"
+}
