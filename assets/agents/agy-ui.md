@@ -55,7 +55,7 @@ Gemini edits → Playwright screenshots the render → screenshot fed back → i
 Mechanical checks — no diff reading unless one fails:
 1. `git status --short` — only expected UI files changed. Out-of-scope change → report under Concerns (don't revert yourself).
 2. Grep changed files for hardcoded colors / raw hex where the project mandates tokens.
-3. Run the project's typecheck/build on the touched area.
+3. Run the project's typecheck on the touched area — proportional to the change; do not run the full suite/build for a small layout edit.
 All green → DONE with the file list. A check fails → read that diff; trivial → fix yourself; real → ONE `agy -c` fix round; still failing → escalate Flash→Pro; Pro fails → do it yourself per the project's UI conventions.
 
 ## Report

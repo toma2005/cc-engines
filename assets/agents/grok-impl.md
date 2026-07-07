@@ -38,8 +38,11 @@ grok -p "<self-contained spec>" -m "$GROK_IMPL_MODEL" \
 
 ## Step 4 — Verify (ground truth; self-report advisory)
 1. `git status --short` — confirm expected files changed. **Empty diff = Grok did nothing → failure.**
-2. Run the acceptance criteria for real; paste the output.
-3. **DONE only with real git + test receipts.** No receipts → BLOCKED.
+2. Verify **proportional to the change** — do NOT run the full suite for a small edit (a full test/build on a monorepo costs minutes and dwarfs a few-line change):
+   - UI/markup/styling or ≤ a few files → typecheck the affected package only (e.g. `tsc --noEmit`), or lint the changed files, or just read the diff. Skip full build/test.
+   - Logic, shared contracts, API, or many files → run the focused tests for the touched area; broaden to build/full-suite ONLY if a shared contract changed.
+   Paste the actual output of whatever you ran.
+3. **DONE only if you pasted real git + a proportional check.** No receipts → BLOCKED.
 4. Fails → ONE `-c` follow-up with the exact errors. Still failing → **Fallback**.
 
 ## Fallback

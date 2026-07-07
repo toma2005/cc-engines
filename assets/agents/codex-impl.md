@@ -32,8 +32,11 @@ node "$COMPANION" task "<self-contained spec>" --write > /tmp/codex-impl.log 2>&
 ## Step 4 — Verify (ground truth; self-report advisory)
 Same turn, before reporting:
 1. `git status --short` — confirm the expected files changed. **Empty diff = Codex did nothing → failure**; retry once or Fallback.
-2. Run the narrowest real check for the touched area (focused tests / typecheck / build). Paste the actual output.
-3. **DONE only if you pasted real git + test output.** No receipts → BLOCKED.
+2. Verify **proportional to the change** — do NOT run the full suite for a small edit (a full test/build on a monorepo costs minutes and dwarfs a few-line change):
+   - UI/markup/styling or ≤ a few files → typecheck the affected package only (e.g. `tsc --noEmit`), or lint the changed files, or just read the diff. Skip full build/test.
+   - Logic, shared contracts, API, or many files → run the focused tests for the touched area; broaden to build/full-suite ONLY if a shared contract changed.
+   Paste the actual output of whatever you ran.
+3. **DONE only if you pasted real git + a proportional check.** No receipts → BLOCKED.
 4. Check fails → ONE follow-up `node "$COMPANION" task "fix: <exact errors>" --write --resume-last`. Still failing → **Fallback**.
 
 ## Fallback

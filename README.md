@@ -16,6 +16,7 @@ Each engine is a thin Claude Code **subagent** (or skill) that: builds a self-co
 | `grok-impl` | subagent | xAI Grok | code implementation |
 | `agy-ui` | subagent | Antigravity (Gemini) | UI / layout, mockup→spec |
 | `ui-vision-loop` | skill | Antigravity + Playwright | closed-loop visual fidelity (edit → screenshot → iterate) |
+| `code-impl` | skill | Codex / Grok | run a single implementation task **inline** (no subagent spawn) |
 | routing policy + liveness protocol | docs | — | how the model routes + why it's safe |
 
 Every engine is optional and independent — if its CLI isn't installed, that agent falls back to Claude.
@@ -30,7 +31,7 @@ npx cc-engines --force    # overwrite existing files
 
 Or from GitHub before it's published to npm:
 ```bash
-npx github:<your-org>/cc-engines
+npx github:toma2005/cc-engines
 ```
 
 This copies the agents into `<target>/.claude/agents/`, the skill into `.claude/skills/`, and the docs + env template into `.claude/cc-engines/`. **Restart Claude Code** afterward so the registry reloads.
