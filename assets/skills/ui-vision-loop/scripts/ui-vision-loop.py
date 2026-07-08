@@ -253,22 +253,26 @@ def _ensure_playwright() -> None:
                                   os.path.join(cache_home, "ui-vision-loop/env")))
     env_python = _venv_python(env_dir)
     noticed = False
-    if not env_python.exists():
-        print("Bootstrapping Playwright for ui-vision-loop (~150MB one-time download)...",
-              file=sys.stderr)
-        noticed = True
-        subprocess.check_call([sys.executable, "-m", "venv", str(env_dir)])
-
-    has_playwright = subprocess.run(
-        [str(env_python), "-c", "import playwright"],
-        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-    ).returncode == 0
-    if not has_playwright:
-        if not noticed:
+    try:
+        if not env_python.exists():
             print("Bootstrapping Playwright for ui-vision-loop (~150MB one-time download)...",
                   file=sys.stderr)
-        subprocess.check_call([str(env_python), "-m", "pip", "install", "-q", "playwright"])
-        subprocess.check_call([str(_venv_bin(env_dir, "playwright")), "install", "chromium"])
+            noticed = True
+            subprocess.check_call([sys.executable, "-m", "venv", str(env_dir)])
+
+        has_playwright = subprocess.run(
+            [str(env_python), "-c", "import playwright"],
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+        ).returncode == 0
+        if not has_playwright:
+            if not noticed:
+                print("Bootstrapping Playwright for ui-vision-loop (~150MB one-time download)...",
+                      file=sys.stderr)
+            subprocess.check_call([str(env_python), "-m", "pip", "install", "-q", "playwright"])
+            subprocess.check_call([str(_venv_bin(env_dir, "playwright")), "install", "chromium"])
+    except (subprocess.CalledProcessError, OSError) as e:
+        _fail(f"Playwright bootstrap failed ({e}). Ensure python3 has `venv`+`pip`, "
+              f"or set UI_VISION_ENV_DIR to a python that already has playwright. Env dir: {env_dir}")
 
     if os.path.realpath(sys.executable) != os.path.realpath(env_python):
         if os.environ.get("UI_VISION_BOOTSTRAPPED") == "1":
@@ -438,6 +442,19 @@ DEFAULT_DEVICES = [
 ]
 
 
+def _fail(reason: str) -> None:
+    """Emit a JSON result with a stopped_reason and exit non-zero (caller-parseable)."""
+    print(json.dumps({"stopped_reason": reason, "iterations": 0,
+                      "files_changed": [], "shots_before": [], "shots_after": [],
+                      "warnings": []}, indent=2))
+    raise SystemExit(2)
+
+
+def _require_cmd(cmd: str, hint: str) -> None:
+    if shutil.which(cmd) is None:
+        _fail(f"required command '{cmd}' not found on PATH — {hint}")
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="agy UI vision loop (no MCP).")
     ap.add_argument("--project-dir", required=True)
@@ -459,6 +476,18 @@ def main() -> int:
     wt.add_argument("--worktree", dest="worktree", action="store_true", default=True)
     wt.add_argument("--no-worktree", dest="worktree", action="store_false")
     args = ap.parse_args()
+
+    # Preflight guards — fail fast (before the ~150MB Playwright bootstrap or a
+    # dev-server start) if inputs/tools are missing. Emit JSON so callers parse it.
+    if not Path(args.project_dir).is_dir():
+        _fail(f"--project-dir does not exist: {args.project_dir}")
+    if args.devices:
+        try:
+            json.loads(args.devices)
+        except Exception as e:
+            _fail(f"--devices is not valid JSON: {e}")
+    _require_cmd("agy", "install the agy CLI (Google Antigravity); the loop drives it")
+    _require_cmd("git", "the diff-gate/worktree needs git")
 
     _ensure_playwright()
 
