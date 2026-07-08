@@ -40,12 +40,16 @@ Rules:
 - **Feed scout findings** (verified, `file:line`) into each slice's spec. If the plan's anchors are wrong (a named file/function doesn't exist), re-scout the real integration points before building that slice.
 - Don't over-spawn (performance + host policy).
 
-### Parallel safety — isolate, checkpoint, guard git
-The real hazard of parallel engines is a **shared working tree**: N engines editing at once can stomp each other, and one destructive git command (`reset --hard`, `checkout`/`restore` of tracked files, `clean`, `stash`, `rebase`, `push --force`) wipes *everyone's* uncommitted work at once. Defend with, in order of strength:
-1. **One git worktree per parallel slice** (best). Each engine runs in its own working dir + branch, so slices can't touch each other's files and a bad git command only affects that slice's worktree. grok has `-w` built in; for a Codex/Claude slice use `git worktree add <dir> HEAD` (symlink `node_modules`/env in for a monorepo). Merge each slice back after it verifies.
-2. **Checkpoint before the wave.** If you don't isolate, `git add -A && git commit` (or stash to a named ref) a recovery point before launching, so a wipe is recoverable via `git reflog`.
-3. **Forbid destructive git in every slice's spec** (see the engine agents) — engines edit files only; all git stays with the orchestrator.
-Also: keep each slice's file ownership strictly non-overlapping, and commit each slice to its own branch/commit as it lands so a later slice can't lose an earlier one.
+### Parallel safety — commit-based (default)
+The real hazard of parallel engines is a **shared working tree**: N engines editing at once can stomp each other, and one destructive git command (`reset --hard`, `checkout`/`restore` of tracked files, `clean`, `stash`, `rebase`, `push --force`) wipes *everyone's* uncommitted work at once. **Default protection is commit-based (worktrees are too heavy for most monorepos):**
+1. **Checkpoint before the wave** — `git add -A && git commit` (or stash to a named ref) so any wipe is recoverable via `git reflog`.
+2. **Forbid destructive git in every slice's spec** (baked into the engine agents) — engines edit files only; all git stays with the orchestrator.
+3. **Strictly non-overlapping file ownership** per slice.
+4. **Commit each slice as it verifies** (atomic, its own commit) — once landed it's safe from a later slice.
+
+Honest limit: commit-per-slice protects *landed* slices and gives a recovery point; it does **not** stop two *concurrent in-flight* slices from clobbering each other's uncommitted work. Rules 2+3 are what cover the concurrent case. If a wave has genuinely high conflict/wipe risk, either run the risky slice sequentially, or escalate to isolation.
+
+**Escalation (rare): one git worktree per slice.** Only when a wave really can't be made non-overlapping or a slice is too dangerous to share the tree. `grok -w`, or `git worktree add <dir> HEAD` for a Codex/Claude slice (symlink `node_modules`/env for a monorepo), merge back after verify. Heavy — skip unless needed.
 
 ### Tracking a wave
 `TaskList` doesn't see engine jobs. Use `codex-companion status --all` for live Codex jobs; the host notifies when each Claude subagent finishes. Keep a small CONTINUITY-style ledger of `slice → engine → files → status` so the whole wave is visible.
