@@ -33,6 +33,7 @@ grok -p "<self-contained spec>" -m "$GROK_IMPL_MODEL" \
 ```
 - `--always-approve` lets Grok edit files headless. `--output-format json` → structured `{text, stopReason, ...}`.
 - **NEVER background** (`&` / run_in_background) — foreground so its exit is your result.
+- **Git safety (state in the spec):** the engine edits files ONLY. It must NOT run destructive/history-rewriting git — `reset --hard`, `checkout`/`restore` of tracked files, `clean`, `stash`, `rebase`, `push`, `branch -D`. All git is the orchestrator's job. (Critical when other slices share the working tree — one bad git wipes everyone's work.)
 - Isolation option (only if the task risks shared/config files): add `-w <name>` for Grok's built-in git worktree (changes then live there and must be merged back — heavier).
 - Iterate: `-c` (continue). Long task → split into smaller foreground specs; do not background.
 - Note: `grok "prompt"` (positional) is an interactive TUI needing a TTY; only `-p` is headless.

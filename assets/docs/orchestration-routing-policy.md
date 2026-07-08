@@ -40,6 +40,16 @@ Rules:
 - **Feed scout findings** (verified, `file:line`) into each slice's spec. If the plan's anchors are wrong (a named file/function doesn't exist), re-scout the real integration points before building that slice.
 - Don't over-spawn (performance + host policy).
 
+### Parallel safety — isolate, checkpoint, guard git
+The real hazard of parallel engines is a **shared working tree**: N engines editing at once can stomp each other, and one destructive git command (`reset --hard`, `checkout`/`restore` of tracked files, `clean`, `stash`, `rebase`, `push --force`) wipes *everyone's* uncommitted work at once. Defend with, in order of strength:
+1. **One git worktree per parallel slice** (best). Each engine runs in its own working dir + branch, so slices can't touch each other's files and a bad git command only affects that slice's worktree. grok has `-w` built in; for a Codex/Claude slice use `git worktree add <dir> HEAD` (symlink `node_modules`/env in for a monorepo). Merge each slice back after it verifies.
+2. **Checkpoint before the wave.** If you don't isolate, `git add -A && git commit` (or stash to a named ref) a recovery point before launching, so a wipe is recoverable via `git reflog`.
+3. **Forbid destructive git in every slice's spec** (see the engine agents) — engines edit files only; all git stays with the orchestrator.
+Also: keep each slice's file ownership strictly non-overlapping, and commit each slice to its own branch/commit as it lands so a later slice can't lose an earlier one.
+
+### Tracking a wave
+`TaskList` doesn't see engine jobs. Use `codex-companion status --all` for live Codex jobs; the host notifies when each Claude subagent finishes. Keep a small CONTINUITY-style ledger of `slice → engine → files → status` so the whole wave is visible.
+
 ## Always
 - Foreground, never engine-level `--background` (see the liveness protocol).
 - Verify with git + tests you run yourself before calling anything DONE; engine self-reports are advisory.

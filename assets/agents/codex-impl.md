@@ -27,6 +27,7 @@ Only a short tail enters your context — ground truth is git + tests, not Codex
 node "$COMPANION" task "<self-contained spec>" --write > /tmp/codex-impl.log 2>&1; echo "exit=$?"; tail -30 /tmp/codex-impl.log
 ```
 - **NEVER use codex `--background` here.** As a subagent, backgrounding then ending your turn orphans the job with nobody to verify it. Foreground makes Codex's exit your tool result.
+- **Git safety (state in the spec):** Codex edits files ONLY. It must NOT run destructive/history-rewriting git — `reset --hard`, `checkout`/`restore` of tracked files, `clean`, `stash`, `rebase`, `push`, `branch -D`. All git is the orchestrator's job (one bad git command wipes any parallel slices sharing the working tree).
 - Task may exceed the 10-min Bash timeout → split into smaller foreground phases; do not background.
 - Iterate on the same work: add `--resume-last`. Read-only diagnosis: omit `--write`.
 
