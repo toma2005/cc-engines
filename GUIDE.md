@@ -17,7 +17,7 @@ A complete walkthrough: what it is, how to install it into a project, how to wir
 
 ---
 
-> **Platform support:** macOS and Linux run natively. **On Windows, use WSL2 (recommended) or Git Bash** — the agent instructions are POSIX shell (`$HOME`, `/tmp`, `< /dev/null`, pipes) and the `ui-vision-loop` script needs a POSIX pseudo-terminal (it exits with a clear message on native Windows). The `npx` installer copies files cross-platform, but the engine workflows assume a POSIX shell. Native-Windows (cmd/PowerShell) is not supported.
+> **Platform support:** macOS and Linux run natively. **Windows** is supported three ways: **WSL2** (recommended — behaves exactly like Linux) or **Git Bash** run the POSIX commands as-is; **native PowerShell/cmd** works too — the installer prints PowerShell-appropriate setup and every agent points to `.claude/cc-engines/cross-platform.md` for a POSIX→PowerShell command table. The `ui-vision-loop` script is cross-platform (self-bootstraps its venv; uses pipes instead of a pty on Windows — best-effort, fall back to WSL2 if `agy` suppresses output without a console). The `npx` installer copies files on any OS.
 
 ## 1. Mental model
 

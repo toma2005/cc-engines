@@ -2,6 +2,8 @@
 name: code-impl
 description: Run a code-implementation task INLINE in the current context by delegating to an external engine CLI (OpenAI Codex or xAI Grok) — no subagent spawn. Use this as the default for a single implementation task; it builds a spec, runs the engine foreground, and verifies proportionally. Spawn the codex-impl/grok-impl subagents instead only to isolate a large/noisy transcript or to run several independent tasks in parallel.
 ---
+> **Shell:** commands below are POSIX (bash/zsh) — they run as-is on macOS/Linux/WSL2/Git Bash. On native Windows PowerShell, translate per `.claude/cc-engines/cross-platform.md`.
+
 
 # code-impl (inline engine runner)
 

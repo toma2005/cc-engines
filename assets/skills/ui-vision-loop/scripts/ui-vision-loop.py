@@ -40,17 +40,8 @@ def _strip_ansi(text: str) -> str:
     return _ANSI_RE.sub("", text).replace("\r\n", "\n").replace("\r", "")
 
 
-def run_agy(prompt: str, cwd: str, *, model: str | None, continue_: bool,
-            add_dirs: list[str], timeout: int) -> str:
-    """Run `agy -p <prompt>` in cwd through a PTY; return cleaned stdout."""
-    if os.name == "nt":
-        raise RuntimeError(
-            "ui-vision-loop drives the agy CLI through a POSIX pseudo-terminal, "
-            "which Windows lacks. Run this under WSL2 (or Git Bash with a POSIX "
-            "python). Native-Windows support is not implemented."
-        )
-    import pty  # POSIX-only; local import keeps non-POSIX --help working.
-
+def _agy_argv(prompt: str, model: str | None, continue_: bool,
+              add_dirs: list[str]) -> list[str]:
     argv = ["agy", "--dangerously-skip-permissions"]
     if model:
         argv += ["--model", model]
@@ -59,6 +50,38 @@ def run_agy(prompt: str, cwd: str, *, model: str | None, continue_: bool,
     for d in add_dirs:
         argv += ["--add-dir", d]    # let agy read screenshots outside cwd
     argv += ["-p", prompt]
+    return argv
+
+
+def run_agy(prompt: str, cwd: str, *, model: str | None, continue_: bool,
+            add_dirs: list[str], timeout: int) -> str:
+    """Run `agy -p <prompt>` in cwd; return cleaned stdout.
+
+    POSIX: through a pseudo-terminal (agy drops stdout on a plain pipe).
+    Windows: no pty — run over pipes. Best-effort and UNVERIFIED; if agy
+    suppresses output without a console, use WSL2 instead.
+    """
+    argv = _agy_argv(prompt, model, continue_, add_dirs)
+    if os.name == "nt":
+        return _run_agy_windows(argv, cwd, timeout)
+    return _run_agy_pty(argv, cwd, timeout)
+
+
+def _run_agy_windows(argv: list[str], cwd: str, timeout: int) -> str:
+    """Windows path: plain pipes (no pty). See run_agy caveat."""
+    try:
+        proc = subprocess.run(argv, cwd=cwd, stdin=subprocess.DEVNULL,
+                              capture_output=True, text=True, errors="replace",
+                              timeout=timeout)
+        out = (proc.stdout or "") + (proc.stderr or "")
+    except subprocess.TimeoutExpired as e:
+        out = (e.stdout if isinstance(e.stdout, str) else "") or ""
+    return _strip_ansi(out)
+
+
+def _run_agy_pty(argv: list[str], cwd: str, timeout: int) -> str:
+    """POSIX path: drive agy through a pseudo-terminal."""
+    import pty  # POSIX-only; local import keeps Windows / --help working.
 
     master_fd, slave_fd = pty.openpty()
     chunks: list[bytes] = []
@@ -252,7 +275,11 @@ def _ensure_playwright() -> None:
             raise RuntimeError("Playwright bootstrap re-exec guard tripped")
         env = os.environ.copy()
         env["UI_VISION_BOOTSTRAPPED"] = "1"
-        os.execve(str(env_python), [str(env_python), str(Path(__file__).resolve()), *sys.argv[1:]], env)
+        reexec = [str(env_python), str(Path(__file__).resolve()), *sys.argv[1:]]
+        if os.name == "nt":
+            # os.execv is unreliable on Windows; spawn + wait + propagate exit.
+            sys.exit(subprocess.run(reexec, env=env).returncode)
+        os.execve(str(env_python), reexec, env)
 
     __import__("playwright")
 
@@ -468,9 +495,12 @@ def main() -> int:
                 result["stopped_reason"] = f"dev server not reachable at {target_url} and no --serve-cmd given"
                 exit_code = 2
             else:
+                # New process group so _stop can kill the whole dev-server tree.
+                group_kw = ({"creationflags": subprocess.CREATE_NEW_PROCESS_GROUP}
+                            if os.name == "nt" else {"start_new_session": True})
                 started_server = subprocess.Popen(serve_cmd, cwd=run_dir, shell=True,
                                                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-                                                  start_new_session=True)
+                                                  **group_kw)
                 if not wait_ready(target_url, timeout=args.ready_timeout):
                     result["stopped_reason"] = f"dev server failed to become ready at {target_url}"
                     exit_code = 2
@@ -535,7 +565,11 @@ def _stop(proc) -> None:
     if proc is None:
         return
     try:
-        os.killpg(os.getpgid(proc.pid), 15)
+        if os.name == "nt":
+            subprocess.run(["taskkill", "/T", "/F", "/PID", str(proc.pid)],
+                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        else:
+            os.killpg(os.getpgid(proc.pid), 15)
     except Exception:
         try:
             proc.terminate()

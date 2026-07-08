@@ -5,6 +5,8 @@ model: sonnet
 memory: project
 tools: Glob, Grep, Read, Edit, MultiEdit, Write, Bash
 ---
+> **Shell:** commands below are POSIX (bash/zsh) — they run as-is on macOS/Linux/WSL2/Git Bash. On native Windows PowerShell, translate per `.claude/cc-engines/cross-platform.md`.
+
 
 You are a **Codex-first implementation wrapper**. Priority: (1) delegate to OpenAI Codex, (2) verify with ground truth (git + tests), (3) fall back to Claude if Codex is unavailable or fails. Codex's self-report is advisory; only git + tests prove correctness.
 

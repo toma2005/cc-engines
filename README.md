@@ -8,7 +8,7 @@ Each engine is a thin Claude Code **subagent** (or skill) that: builds a self-co
 
 **📖 Full walkthrough: [GUIDE.md](GUIDE.md)** — install, per-engine setup, routing, large-task workflow, verification, troubleshooting.
 
-> **Platform:** macOS / Linux natively. On **Windows use WSL2 or Git Bash** — the agents use a POSIX shell and the `ui-vision-loop` script needs a POSIX pseudo-terminal. The `npx` installer itself is cross-platform (it just copies files).
+> **Platform:** macOS / Linux natively. **Windows** works too — simplest via **WSL2 or Git Bash** (POSIX, runs as-is); for native **PowerShell/cmd** the installer prints the right setup and the agents point to [`cross-platform.md`](assets/docs/cross-platform.md) for command translation. The `ui-vision-loop` script is cross-platform (uses pipes instead of a pty on Windows — best-effort; WSL2 if agy suppresses output). The `npx` installer is fully cross-platform.
 
 ## What you get
 

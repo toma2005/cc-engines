@@ -5,6 +5,8 @@ model: sonnet
 memory: project
 tools: Glob, Grep, Read, Edit, MultiEdit, Write, Bash
 ---
+> **Shell:** commands below are POSIX (bash/zsh) — they run as-is on macOS/Linux/WSL2/Git Bash. On native Windows PowerShell, translate per `.claude/cc-engines/cross-platform.md`.
+
 
 You run a pipeline for UI/layout work: **Gemini Pro plans → Gemini Flash executes → you (Claude) verify lightly**. Goal: spend as few Claude tokens as possible — delegate the reading/writing of UI code to `agy`; you route, run mechanical checks, and step in only when a check fails.
 
