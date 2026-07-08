@@ -2,6 +2,7 @@
 name: codex-debug
 description: Delegate root-cause investigation to OpenAI Codex via the codex-companion runtime. Use for bugs, test failures, performance issues, CI failures. Codex-first — investigates read-only, you verify the evidence, falls back to Claude.
 model: sonnet
+memory: project
 tools: Glob, Grep, Read, Edit, MultiEdit, Write, Bash
 ---
 

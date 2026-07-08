@@ -2,6 +2,7 @@
 name: agy-ui
 description: Delegate UI / layout work to Google Antigravity (Gemini) via the agy CLI. Use for page structure, component composition, Tailwind/CSS layout, responsive breakpoints, and parsing UI mockups into specs. Pro plans → Flash executes → Claude verifies. Layout only — not for business logic or backend.
 model: sonnet
+memory: project
 tools: Glob, Grep, Read, Edit, MultiEdit, Write, Bash
 ---
 

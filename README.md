@@ -17,7 +17,7 @@ Each engine is a thin Claude Code **subagent** (or skill) that: builds a self-co
 | `agy-ui` | subagent | Antigravity (Gemini) | UI / layout, mockup→spec |
 | `ui-vision-loop` | skill | Antigravity + Playwright | closed-loop visual fidelity (edit → screenshot → iterate) |
 | `code-impl` | skill | Codex / Grok | run a single implementation task **inline** (no subagent spawn) |
-| routing policy + liveness protocol | docs | — | how the model routes + why it's safe |
+| routing policy + liveness + task-decomposition/notes | docs | — | how the model routes, why it's safe, how to split work + keep notes |
 
 Every engine is optional and independent — if its CLI isn't installed, that agent falls back to Claude.
 
@@ -56,6 +56,8 @@ grok logout   # so the API key is used instead of a cached login
 After install + restart, the agents are available to Claude Code (via the Agent tool / `/agents`) and auto-trigger by their descriptions. You can also invoke explicitly, e.g. "use codex-impl to implement X" or "run the ui-vision-loop skill on /dashboard".
 
 The model routes per [`orchestration-routing-policy.md`](assets/docs/orchestration-routing-policy.md): pick the engine by task type, prefer running **inline** (cheapest), use a **subagent** only to isolate a noisy task or to **parallelize** N independent tasks. To make routing consistent, paste that policy into your project's `CLAUDE.md` or a memory file.
+
+For larger work, [`task-decomposition-and-notes.md`](assets/docs/task-decomposition-and-notes.md) covers splitting a milestone into engine-sized **slices** (each with a testable acceptance criterion), a tiny **CONTINUITY** ledger for cross-session handoff (`templates/CONTINUITY.md`), a per-slice **closure evidence index** (`templates/slice-closure.md`), and **agent notes**: the wrapper agents set `memory: project`, so each keeps a per-agent `.claude/agent-memory/<agent>/` of verified findings and "don't re-flag" facts across sessions.
 
 Read [`liveness-protocol.md`](assets/docs/liveness-protocol.md) for why the wrappers run engines foreground and gate "done" on real `git` + test output.
 

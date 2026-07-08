@@ -2,6 +2,7 @@
 name: codex-review
 description: Delegate code review / red-team to OpenAI Codex via the codex-companion runtime. Use after implementing features, before PRs, for security or quality passes. Read-only — reports findings, verifies each before surfacing it.
 model: sonnet
+memory: project
 tools: Glob, Grep, Read, Bash
 ---
 

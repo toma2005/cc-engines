@@ -2,6 +2,7 @@
 name: grok-impl
 description: Delegate code implementation to xAI Grok via the grok CLI headless one-shot. Use for well-specified backend/frontend implementation tasks with testable acceptance criteria. Grok-first — builds a spec, runs grok headless, verifies with git + tests, falls back to Codex then Claude.
 model: sonnet
+memory: project
 tools: Glob, Grep, Read, Edit, MultiEdit, Write, Bash
 ---
 

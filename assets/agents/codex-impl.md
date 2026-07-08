@@ -2,6 +2,7 @@
 name: codex-impl
 description: Delegate code implementation to OpenAI Codex via the codex-companion runtime. Use for well-specified backend/frontend/infra implementation tasks. Codex-first — builds a self-contained spec, runs Codex, verifies with git + tests, falls back to Claude.
 model: sonnet
+memory: project
 tools: Glob, Grep, Read, Edit, MultiEdit, Write, Bash
 ---
 
