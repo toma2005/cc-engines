@@ -8,6 +8,8 @@ Each engine is a thin Claude Code **subagent** (or skill) that: builds a self-co
 
 **📖 Full walkthrough: [GUIDE.md](GUIDE.md)** — install, per-engine setup, routing, large-task workflow, verification, troubleshooting.
 
+> **Platform:** macOS / Linux natively. On **Windows use WSL2 or Git Bash** — the agents use a POSIX shell and the `ui-vision-loop` script needs a POSIX pseudo-terminal. The `npx` installer itself is cross-platform (it just copies files).
+
 ## What you get
 
 | Component | Type | Engine | Use for |

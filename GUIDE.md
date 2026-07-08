@@ -17,6 +17,8 @@ A complete walkthrough: what it is, how to install it into a project, how to wir
 
 ---
 
+> **Platform support:** macOS and Linux run natively. **On Windows, use WSL2 (recommended) or Git Bash** — the agent instructions are POSIX shell (`$HOME`, `/tmp`, `< /dev/null`, pipes) and the `ui-vision-loop` script needs a POSIX pseudo-terminal (it exits with a clear message on native Windows). The `npx` installer copies files cross-platform, but the engine workflows assume a POSIX shell. Native-Windows (cmd/PowerShell) is not supported.
+
 ## 1. Mental model
 
 cc-engines does not add a new AI. It lets **Claude Code delegate work to external coding-agent CLIs** you already have — OpenAI **Codex**, xAI **Grok**, Google **Antigravity (Gemini/`agy`)** — and to a Playwright-driven **vision loop**. Claude stays the orchestrator: it plans, picks the engine, hands over a scoped spec, and — crucially — **verifies the result itself with `git` + tests**. Engines do the typing; Claude owns correctness.

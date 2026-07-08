@@ -11,6 +11,7 @@ A subprocess loop that gives Gemini **eyes**: it edits the UI, sees its own rend
 A page/component that **renders at a URL** and must match a visual intent or a design mockup, where fidelity should be *verified by looking* — not by reading class names. Not for pure markup with nothing to render, backend, or non-UI code.
 
 ## Prerequisites (self-contained)
+- **Platform:** POSIX (macOS/Linux, or Windows under WSL2). The agy runner uses a pseudo-terminal; on native Windows the script exits with a clear "run under WSL2" message.
 - `agy` CLI (Google Antigravity) on PATH, configured with a model.
 - Any `python3` (3.8+) with `venv`. Playwright is **self-provisioned**: on first run the script creates its own venv (default `~/.cache/ui-vision-loop/venv`, override `UI_VISION_ENV_DIR`), installs playwright + chromium (~150MB, once), and re-execs into it. Copy this folder into any repo and it bootstraps itself.
 - The web app's dev-server command + URL.

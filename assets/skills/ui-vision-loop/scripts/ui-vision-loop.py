@@ -43,6 +43,12 @@ def _strip_ansi(text: str) -> str:
 def run_agy(prompt: str, cwd: str, *, model: str | None, continue_: bool,
             add_dirs: list[str], timeout: int) -> str:
     """Run `agy -p <prompt>` in cwd through a PTY; return cleaned stdout."""
+    if os.name == "nt":
+        raise RuntimeError(
+            "ui-vision-loop drives the agy CLI through a POSIX pseudo-terminal, "
+            "which Windows lacks. Run this under WSL2 (or Git Bash with a POSIX "
+            "python). Native-Windows support is not implemented."
+        )
     import pty  # POSIX-only; local import keeps non-POSIX --help working.
 
     argv = ["agy", "--dangerously-skip-permissions"]
