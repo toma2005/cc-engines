@@ -6,6 +6,8 @@ Each engine is a thin Claude Code **subagent** (or skill) that: builds a self-co
 
 > Nothing here contains credentials. Bring your own CLIs and keys. See [Security](#security).
 
+**📖 Full walkthrough: [GUIDE.md](GUIDE.md)** — install, per-engine setup, routing, large-task workflow, verification, troubleshooting.
+
 ## What you get
 
 | Component | Type | Engine | Use for |
