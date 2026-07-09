@@ -81,14 +81,18 @@ Install the `codex@openai-codex` Claude Code plugin (provides the `codex-compani
 ### xAI Grok (BYOK)
 ```bash
 cp .claude/cc-engines/templates/grok-worker.env.example ~/.grok/grok-worker.env
-# edit ~/.grok/grok-worker.env:
-#   XAI_API_KEY         = your key
-#   GROK_MODELS_BASE_URL= your inference endpoint, MUST end in /v1
-#   GROK_IMPL_MODEL     = the model id (see: grok models)
+# edit ~/.grok/grok-worker.env: XAI_API_KEY, GROK_MODELS_BASE_URL (MUST end in /v1),
+#   GROK_IMPL_MODEL = a CUSTOM model id (below) — NOT a built-in like grok-4.5
 chmod 600 ~/.grok/grok-worker.env
-grok logout   # IMPORTANT: forces API-key auth instead of a cached login
 ```
-Why `grok logout`: if grok has a cached OIDC login, it sends that token to your endpoint and you get `401 Invalid API key`. Logging out makes it use `XAI_API_KEY`. The key lives only in `~/.grok/grok-worker.env` — outside any repo.
+**Define a custom BYOK model** in `~/.grok/config.toml`, and point `GROK_IMPL_MODEL` at its name:
+```toml
+[model.byok-grok]
+model    = "grok-4.5"                          # the id your endpoint actually serves
+base_url = "https://your-endpoint.example.com/v1"
+env_key  = "XAI_API_KEY"                        # reads the key from grok-worker.env
+```
+**Why a custom model, not a built-in id:** a built-in id (`grok-4.5`, …) routes through xAI's own auth (OIDC). If grok has ANY cached OIDC login — even an **expired** one — it uses that instead of your key and can **HANG on token refresh** (not just return `401`). A custom model with an explicit `base_url` + `api_key`/`env_key` is a plain OpenAI-compatible path that never touches OIDC — the robust BYOK route. (`grok logout` clears the cached login too, but a later `grok login` silently reintroduces the hang; the custom model is the durable fix.) The key lives only in `~/.grok/grok-worker.env` — outside any repo.
 
 ### Antigravity (`agy`)
 Install the `agy` CLI and confirm a model with `agy models`. The `agy-ui` agent passes the model by its full display name (e.g. `"Gemini 3.5 Flash (High)"`).
@@ -102,7 +106,7 @@ Claude applies a layered policy (full text in `.claude/cc-engines/orchestration-
 
 1. **Size gate** — trivial edits (a few lines, files known) → Claude does them directly, **no engine** (the engine's agentic loop + verify costs minutes and dwarfs a tiny change).
 2. **By task type** — UI-with-render → `ui-vision-loop`; pure markup → `agy-ui`; implementation → Codex/Grok; debug → `codex-debug`; review → `codex-review`; planning → usually Claude itself.
-3. **Engine (Codex vs Grok)** — both implement code. Grok = fast, well-specified. Codex = mature, handles ambiguous/intricate (a bit slower). Cross-fall back on failure.
+3. **Engine (Codex vs Grok)** — both implement code. **Default: a plan is done → prefer Grok** (`grok-impl`, pointed straight at the plan — fast, the plan is its spec). Codex for ambiguous / no-plan / intricate work, or as the cross-fallback. Cross-fall back on failure.
 4. **Inline vs subagent** — **inline (`code-impl` skill) is the default** for one task (cheapest, no spawn). Use a **subagent** only to isolate a noisy transcript or to parallelize.
 5. **Parallel waves + per-slice choice** — split a big task into independent slices (non-overlapping files) and pick the engine **per slice**:
    - **Sensitive code** (revenue/billing/payments, auth/security, DB migrations, wide blast radius) → run as a **Claude subagent (in-context)**, not an external engine, then a **mandatory `codex-review`**. External engines edit in an opaque sandbox; keep sensitive edits visible in Claude's permission system.
@@ -137,7 +141,8 @@ Full rationale in `.claude/cc-engines/liveness-protocol.md`. The rules the agent
 
 | Symptom | Cause | Fix |
 |---|---|---|
-| Grok: `401 Invalid API key` | grok using a cached OIDC login, not the key | `grok logout`; ensure `XAI_API_KEY` set |
+| Grok: `401`, or **hangs** on a built-in model id | `GROK_IMPL_MODEL` is a built-in id (`grok-4.5`) → routes via xAI/OIDC; a cached/expired login is used instead of your key | Point `GROK_IMPL_MODEL` at a **custom `[model.*]`** in `~/.grok/config.toml` (`base_url`+`env_key`) — never uses OIDC (§4). `grok logout` is a weaker fallback |
+| Engine keeps running / RAM climbs after you stopped a subagent | `TaskStop` doesn't stop the spawned engine — Codex's `app-server` broker survives | Reap it: `ps … grep app-server-broker`, `kill -9` the `ppid=1` broker for THIS project's `--cwd` (liveness Rule 7) |
 | Grok: `unauthorized` from `/models` | endpoint missing `/v1` | set `GROK_MODELS_BASE_URL` to end in `/v1` |
 | Grok: `Device not configured (os error 6)` | ran the interactive TUI (`grok "prompt"`) headless | use `grok -p` (the agents already do) |
 | agy: hangs, zero output | backgrounded / no TTY | run foreground, ONE call, `< /dev/null`; never `run_in_background` |
@@ -155,7 +160,7 @@ npx github:toma2005/cc-engines --force
 
 # Grok one-shot (what grok-impl runs), foreground:
 . ~/.grok/grok-worker.env
-grok -p "<spec>" -m "$GROK_IMPL_MODEL" --always-approve --output-format json --cwd "$(pwd)" < /dev/null
+grok -p "<spec>" -m "$GROK_IMPL_MODEL" --always-approve --effort high --output-format json --cwd "$(pwd)" < /dev/null
 
 # Codex one-shot (what codex-impl runs):
 COMPANION=$(ls -d "$HOME"/.claude/plugins/cache/openai-codex/codex/*/scripts/codex-companion.mjs | sort -V | tail -1)

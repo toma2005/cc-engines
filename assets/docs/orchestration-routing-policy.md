@@ -19,7 +19,7 @@ Trivial edits (a few lines, files already known) → do them directly, no engine
 - Code review / red-team → **`codex-review`**.
 
 ## Step 2 — Grok vs Codex (for code impl)
-Both are fine; pick per task. Light heuristic: Codex is a solid default (mature, handles ambiguous/complex/debug-adjacent work); Grok suits well-specified tasks with testable acceptance criteria that should run fast. On failure, cross-fall back to the other, then to Claude.
+Both are fine; pick per task. **Default: once a plan/phase file is DONE (well-specified, with testable ACs), prefer `grok-impl`** — point it straight at the plan (per the agent's Step 2: don't pre-digest) and let it run. The finished plan IS the spec grok reads itself, so it's fast + cheap. Reach for **Codex** when the work is ambiguous, has no plan yet, or is intricate / debug-adjacent — and as the cross-fallback when grok fails. Fallback chain: grok → Codex → Claude. (Exception: sensitive money/auth/migration slices — Step 4 — run as a Claude subagent, not an external engine, regardless of plan.)
 
 ## Step 3 — Inline vs subagent
 - **Inline** (call the engine directly in the main context: foreground + redirect log + verify) — the default for a single task where you want the result in context. Cheapest: no second Claude instance, no orphan risk. Best run via the **`code-impl` skill**.

@@ -50,10 +50,11 @@ This copies the agents into `<target>/.claude/agents/`, the skill into `.claude/
 ### Grok BYOK setup
 ```bash
 cp <target>/.claude/cc-engines/templates/grok-worker.env.example ~/.grok/grok-worker.env
-# edit: set XAI_API_KEY, GROK_MODELS_BASE_URL (must end in /v1), GROK_IMPL_MODEL
+# edit: XAI_API_KEY, GROK_MODELS_BASE_URL (must end in /v1),
+#       GROK_IMPL_MODEL = a CUSTOM model id (not a built-in like grok-4.5)
 chmod 600 ~/.grok/grok-worker.env
-grok logout   # so the API key is used instead of a cached login
 ```
+Define that custom model in `~/.grok/config.toml` (`[model.<id>]` with `base_url` + `env_key=XAI_API_KEY`) — a plain OpenAI-compatible BYOK path that never uses xAI's OIDC. A **built-in** model id can pick up a cached/expired OIDC login and **hang** (see [GUIDE §4](GUIDE.md#4-configure-each-engine)); `grok logout` is only a fragile fallback.
 
 ## Usage
 
