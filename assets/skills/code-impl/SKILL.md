@@ -29,7 +29,7 @@ node "$COMPANION" task "<spec>" --write > /tmp/code-impl.log 2>&1; echo "exit=$?
 Grok (requires `~/.grok/grok-worker.env` + `grok logout`):
 ```bash
 . "$HOME/.grok/grok-worker.env"
-grok -p "<spec>" -m "$GROK_IMPL_MODEL" --always-approve --output-format json --cwd "$(pwd)" < /dev/null 2>/tmp/code-impl.err | tail -c 1200
+grok -p "<spec>" -m "$GROK_IMPL_MODEL" --effort high --always-approve --output-format json --cwd "$(pwd)" < /dev/null 2>/tmp/code-impl.err | tail -c 1200
 ```
 - **NEVER background** the engine (no `--background`, no `run_in_background`). Foreground = its exit is your result.
 - Keep the engine tight: exact files in the spec, low turn budget, no extra self-verify flags.
